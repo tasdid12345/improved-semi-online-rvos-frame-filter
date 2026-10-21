@@ -1,0 +1,33 @@
+{
+  "question": "Can a class-balanced LightGBM frame filter keep more frames where a text-referred object is visible than a standard change-threshold keyframe filter under the same frame budget?",
+  "method": "Simulated videos with moving objects and one text-referred target in a random window; per-frame features from tracks with noise. Both filters keep at most the same per-video budget; the test set uses a different simulation seed. Main metric: recall of referred-object frames on test.",
+  "dataset": {
+    "name": "Simulated referring-video tracks (numpy, generated in code)",
+    "source_url": "https://lightgbm.readthedocs.io/",
+    "n_rows": 39000,
+    "n_train": 30000,
+    "n_test": 9000,
+    "same_as_paper": false,
+    "baseline_is_papers_method": false
+  },
+  "metric_name": "recall of referred-object frames kept (test)",
+  "higher_is_better": true,
+  "baseline": "Change-threshold keyframe filter: keep a frame when its scene descriptor changes more than a threshold tuned on train recall, capped at the per-video budget.",
+  "improved": "Class-balanced LightGBM per-frame scorer with causal rolling features, hyper-parameters chosen by 5-fold GroupKFold on train; keeps top-scoring frames per video within the same budget.",
+  "metrics": {
+    "baseline_score": 0.07421875,
+    "improved_score": 0.3185369318181818,
+    "improvement": 0.24431818181818182,
+    "baseline_score_std": 0.0,
+    "improved_score_std": 0.0,
+    "baseline_precision": 0.2599502487562189,
+    "improved_precision": 0.9966666666666667,
+    "baseline_f1": 0.1154696132596685,
+    "improved_f1": 0.4827771797631863,
+    "baseline_kept_per_video": 13.4,
+    "improved_kept_per_video": 15.0,
+    "baseline_threshold": 0.8135160174716343,
+    "improved_cv_recall": 0.32362425519205884
+  },
+  "notes": "Simulation, not the paper's data or model; the paper's filter is unspecified so the baseline is a stand-in. 200 train and 60 test videos of 150 frames; n_train/n_test count frames. Baseline is deterministic, so its std is 0; improved std is over 3 LightGBM seeds (population std). Recall is bounded by budget / referred-frame count, so absolute values depend on the simulation settings. Fix: scene descriptor DESC now has 7 dims (2 position + 4 appearance + detection rate) to match the stacked array."
+}
