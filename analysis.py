@@ -18,7 +18,8 @@ SEEDS = [42, 43, 44]          # LightGBM is randomized -> run all three seeds
 T = 150                       # frames per video
 BUDGET = 15                   # frames kept per video (shared by both filters)
 N_TRAIN, N_TEST = 200, 60     # simulated videos; test uses a different seed
-DESC = [f"d{i}" for i in range(6)]  # scene descriptor used by the baseline
+# scene descriptor used by the baseline: 2 mean-position dims + 4 mean-appearance dims + detection rate
+DESC = [f"d{i}" for i in range(7)]
 FEATS = ["t", "n_det", "text_max", "text_2nd", "text_mean", "speed_mean", "app_mean",
          "text_roll5", "text_roll10max", "text_diff1", "speed_roll5", "app_roll5"]
 
@@ -60,7 +61,9 @@ def simulate_video(rng, vid):
     df["text_diff1"] = df.text_max.diff().fillna(0)
     df["speed_roll5"] = df.speed_mean.rolling(5, min_periods=1).mean()
     df["app_roll5"] = df.app_mean.rolling(5, min_periods=1).mean()
-    df[DESC] = np.column_stack([mpos, mapp, det.sum(1) / K])
+    desc = np.column_stack([mpos, mapp, det.sum(1) / K])  # shape (T, 7) == len(DESC)
+    for j, c in enumerate(DESC):
+        df[c] = desc[:, j]
     return df
 
 
@@ -176,7 +179,8 @@ def main():
         "notes": (f"Simulation, not the paper's data or model; the paper's filter is unspecified so the baseline is a stand-in. "
                   f"{N_TRAIN} train and {N_TEST} test videos of {T} frames; n_train/n_test count frames. "
                   "Baseline is deterministic, so its std is 0; improved std is over 3 LightGBM seeds (population std). "
-                  "Recall is bounded by budget / referred-frame count, so absolute values depend on the simulation settings."),
+                  "Recall is bounded by budget / referred-frame count, so absolute values depend on the simulation settings. "
+                  "Fix: scene descriptor DESC now has 7 dims (2 position + 4 appearance + detection rate) to match the stacked array."),
     }
     with open("results.json", "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)

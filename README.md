@@ -1,25 +1,23 @@
-# Class-balanced frame filtering for text-referred objects in simulated videos
+# Simulated referring-video frame filtering
 
-Semi-online referring video object segmentation (see "A Filtering Framework for Semi-online Referring Video Object Segmentation", 2025) must decide which frames to process when compute is limited. Filtering frames in which the text-referred object is visible is the key step, so a better frame filter can keep more useful frames under the same budget. This experiment asks whether a learned, class-balanced frame scorer beats a standard change-threshold keyframe rule.
+Compares a change-threshold keyframe filter (baseline) with a class-balanced,
+CV-tuned LightGBM frame scorer (improved) under the same per-video frame budget
+(15 of 150 frames) on simulated videos. Main metric: recall of referred-object
+frames on a held-out test set (different simulation seed).
 
-**Question:** Can a class-balanced LightGBM frame filter keep more frames where a text-referred object is visible than a standard change-threshold keyframe filter under the same frame budget?
+## Run
 
-**Dataset:** Simulated videos generated in code (numpy); no download. This is not the paper's own dataset (same_as_paper = false). Train and test videos use different random seeds.
+    pip install numpy pandas lightgbm scikit-learn matplotlib
+    python analysis.py
 
-**Baseline:** a change-threshold keyframe filter that keeps a frame when its scene descriptor changes more than a threshold tuned on training videos, capped at the per-video budget. This stands in for the paper's unspecified filter.
+Writes `results.json` and `figures/recall_bar.png`. Seed 42; LightGBM is also run with seeds 42, 43, 44.
 
-**Improved model:** a class-balanced LightGBM per-frame scorer using causal (past-only) rolling features, with hyper-parameters chosen by grouped cross-validation on the training videos. It keeps the top-scoring frames within each video under the same budget.
+## Fix applied
 
-**Metrics:** main = recall of referred-object frames kept on the test set; secondary = precision, F1, and frames kept per video.
-
-## How to run
-
-```
-pip install -r requirements.txt
-python analysis.py
-```
-
-Results are written to results.json (and figures/recall_bar.png).
+The crash came from the scene descriptor: `np.column_stack` produces 7 columns
+(2 mean-position + 4 mean-appearance + 1 detection rate), but `DESC` only named 6,
+so assignment failed. `DESC` now has 7 entries (`d0`–`d6`), which keeps the
+detection-rate descriptor. The baseline, test set, budget and evaluation are otherwise unchanged.
 
 ## Reference
 
