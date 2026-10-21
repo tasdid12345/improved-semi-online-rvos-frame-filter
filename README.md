@@ -19,6 +19,30 @@ The crash came from the scene descriptor: `np.column_stack` produces 7 columns
 so assignment failed. `DESC` now has 7 entries (`d0`–`d6`), which keeps the
 detection-rate descriptor. The baseline, test set, budget and evaluation are otherwise unchanged.
 
+## Results (latest run)
+
+On a simulated referring-video dataset (60 test videos), a standard change-threshold keyframe filter reached 7.4% recall of referred-object frames, while my class-balanced LightGBM frame scorer reached 31.9% under the same per-video frame budget.
+
+| Metric | Value |
+|---|---|
+| baseline_score | 0.07422 |
+| improved_score | 0.3185 |
+| improvement | 0.2443 |
+| baseline_score_std | 0 |
+| improved_score_std | 0 |
+| baseline_precision | 0.26 |
+| improved_precision | 0.9967 |
+| baseline_f1 | 0.1155 |
+| improved_f1 | 0.4828 |
+| baseline_kept_per_video | 13.4 |
+| improved_kept_per_video | 15 |
+| baseline_threshold | 0.8135 |
+| improved_cv_recall | 0.3236 |
+
+Run on 2026-10-21. Full output: [results.json](results.json) · [run.log](run.log)
+
+Notes: Simulation, not the paper's data or model; the paper's filter is unspecified so the baseline is a stand-in. 200 train and 60 test videos of 150 frames; n_train/n_test count frames. Baseline is deterministic, so its std is 0; improved std is over 3 LightGBM seeds (population std). Recall is bounded by budget / referred-frame count, so absolute values depend on the simulation settings. Fix: scene descriptor DESC now has 7 dims (2 position + 4 appearance + detection rate) to match the stacked array.
+
 ## Reference
 
 This project is motivated by the following paper:
